@@ -55,7 +55,7 @@ class TrunkWidthEvaluator:
         # Check if the save directories already exist, and if they do, abort
         if os.path.isdir(vis_save_dir) or os.path.isdir(mask_save_dir) and not overwrite:
             print("Save directories already exist, aborting. Set overwrite to True to overwrite")
-            raise Exception("Test data directory does not exist")
+            raise Exception("Save directory already exists, Set overwrite to True to overwrite")
         else:
             # Create the save directories
             os.makedirs(vis_save_dir)
@@ -143,6 +143,6 @@ if __name__ == "__main__":
     evaluator.plot_results(96, 1)
 
     # for i in [96, 97, 98]:
-    #     for j in range(1, 5):
+    #     for j in range(1, 2):
     #         evaluator.evaluate_model_test_data(i, j)
 
