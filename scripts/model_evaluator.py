@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-from trunk_width_estimator import TrunkWidthEstimator
+from trunk_segmenter3 import TrunkAnalyzer
 import os
 import sys
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from env_vars import *
 
 
 class TrunkWidthEvaluator:
     def __init__(self):
-        self.width_estimator = TrunkWidthEstimator()
+        self.width_estimator = TrunkAnalyzer()
 
     def evaluate_model_test_data(self, row_num, measurement_num, overwrite=False):
         """
@@ -45,7 +46,7 @@ class TrunkWidthEvaluator:
         if not os.path.isfile(gt_filepath):
             print("Ground truth file does not exist")
             print(gt_filepath)
-            raise Exception("Test data directory does not exist")
+            raise Exception("Ground truth file does not exist")
 
         # Set the save directories
         vis_save_dir = results_path + "row{}/images/measure{}/".format(row_num, measurement_num)
@@ -53,9 +54,12 @@ class TrunkWidthEvaluator:
         widths_save_dir = results_path + "row{}/widths/".format(row_num, measurement_num)
 
         # Check if the save directories already exist, and if they do, abort
-        if os.path.isdir(vis_save_dir) or os.path.isdir(mask_save_dir) and not overwrite:
-            print("Save directories already exist, aborting. Set overwrite to True to overwrite")
-            raise Exception("Save directory already exists, Set overwrite to True to overwrite")
+        if os.path.isdir(vis_save_dir) or os.path.isdir(mask_save_dir):
+            if overwrite:
+                print("Overwriting save directories")
+            else:
+                print("Save directories already exist, aborting. Set overwrite to True to overwrite")
+                raise Exception("Save directory already exists, Set overwrite to True to overwrite")
         else:
             # Create the save directories
             os.makedirs(vis_save_dir)
@@ -84,10 +88,15 @@ class TrunkWidthEvaluator:
 
                 # Get the image and pointcloud
                 img = cv2.imread(os.path.join(test_data_directory, filename))
-                pc_z_vals = np.load(os.path.join(test_data_directory, filename[:-4] + ".npy"))
+
+                pc_path = '/media/jostan/MOAD/research_data/pointcloud_data/row{}_xyz/'.format(row_num) + filename[
+                                                                                                        :-4]+'.npy'
+                # pc_z_vals = np.load(os.path.join(test_data_directory, filename[:-4] + ".npy"))
+                pc = np.load(pc_path)
 
                 # Get the width of the trunk
-                width_est, image_masked, mask = self.width_estimator.get_width(img, pc_z_vals)
+                # width_est, image_masked, mask = self.width_estimator.get_width(img, pc)
+                width_est, image_masked, mask = self.width_estimator.eval_helper(img, pc)
 
                 # If there is no mask, skip this image
                 if width_est is None:
@@ -139,8 +148,8 @@ class TrunkWidthEvaluator:
 
 if __name__ == "__main__":
     evaluator = TrunkWidthEvaluator()
-    evaluator.evaluate_model_test_data(96, 1, overwrite=False)
-    evaluator.plot_results(96, 1)
+    evaluator.evaluate_model_test_data(98, 1, overwrite=True)
+    evaluator.plot_results(98, 1)
 
     # for i in [96, 97, 98]:
     #     for j in range(1, 2):

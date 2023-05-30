@@ -239,7 +239,7 @@ if __name__ == "__main__":
 
     segmenation_model = TrunkSegmenter()
 
-    img = cv2.imread(os.environ.get('DATASET_PATH') + 'row96/24.png')
-    pc = cv2.imread(os.environ.get('DATASET_PATH') + 'row96/24.npy')
+    img = cv2.imread(os.environ.get('DATASET_PATH') + 'row97/74.png')
+    pc = cv2.imread(os.environ.get('DATASET_PATH') + 'row97/74.npy')
 
-    width, masked_image = segmenation_model.show_all_segs(img, threshold=0.1)
+    width, masked_image = segmenation_model.show_all_segs(img, threshold=0.05)

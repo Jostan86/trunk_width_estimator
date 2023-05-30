@@ -140,6 +140,7 @@ def plot_in_pdf(widths, widths_gt, x, y, pdf, plot_num, scale=1.0):
     img_width = fig_w * 100 * scale if scale < 1.0 else fig_w * 100
     img_height = fig_h * 100 * scale if scale < 1.0 else fig_h * 100
     y -= img_height
+
     # Place the image in the pdf
     pdf.drawImage("temp{}.png".format(plot_num), x, y, width=img_width, height=img_height)
 
@@ -164,8 +165,7 @@ def place_image(pdf, x, y, row_num, tree_num, scale=0.37, measure_num=1):
     """
 
     results_root = os.environ.get('RESULTS_PATH')
-    image_path = results_root + "/row{}/images/measure{}/{}".format(row_num, measure_num,
-                                                                                           tree_num) + '.png'
+    image_path = results_root + "/row{}/images/measure{}/{}".format(row_num, measure_num, tree_num) + '.png'
     scale_96 = scale * 0.75
     scale_97 = scale
     width = 640 * scale_96 if row_num == 96 else 640 * scale_97
@@ -174,12 +174,12 @@ def place_image(pdf, x, y, row_num, tree_num, scale=0.37, measure_num=1):
     pdf.drawImage(image_path, x, y, width=width, height=height)
 
 
-def section1(pdf, row_info_all):
+def section1(pdf, row_info_all, info):
     """Makes the first page of the pdf, which contains the statistics of the model"""
 
     # Draw the title
     pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(50, 750, "CV Model Report")
+    pdf.drawString(50, 750, "CV Model Report - " + info)
 
     plot_num = 0
     x = 30
@@ -292,7 +292,7 @@ def section3(pdf, row_info_all):
 
     y_img = 590
     y_text = 700
-    for (row_info, row_num) in zip(row_info_all, [96, 97, 98]):
+    for row_info in row_info_all:
 
         # If no nan values in nan mask, skip
         if not np.any(row_info["nan_mask"]):
@@ -312,7 +312,7 @@ def section3(pdf, row_info_all):
                 pdf.drawString(x_text, 750, "Unable to Find Width for These Trees")
 
             statistics = {
-                "Row": row_num,
+                "Row": row_info["row_num"],
                 "Tree Num": nan_idx + 1,
                 "Width Estimate (mm)": "Not available",
                 "Ground Truth (mm)": np.round(row_info["gt_widths"][nan_idx] * 1000, 2),
@@ -349,9 +349,9 @@ def section4(pdf, row_info_all):
     pdf.drawString(x2, 700, "Num Inconsistent")
     pdf.drawString(x3, 700, "Num Consistent")
     y = 680
-    for (row_info, row_num) in zip(row_info_all, [96, 97, 98]):
+    for row_info in row_info_all:
 
-        pdf.drawString(x1, y, str(row_num))
+        pdf.drawString(x1, y, str(row_info["row_num"]))
         pdf.drawString(x2, y, str(len(row_info["inconsistent_cols"])))
         pdf.drawString(x3, y, str(len(row_info["consistent_cols"])))
         y -= 20
@@ -364,7 +364,7 @@ def section4(pdf, row_info_all):
     pdf.drawString(x3, y, "Max Difference")
     y -= 20
 
-    for (row_info, row_num) in zip(row_info_all, [96, 97, 98]):
+    for row_info in row_info_all:
 
         for (tree_num, max_diff) in zip(row_info["inconsistent_cols"], row_info["difference"]):
             if y < 80:
@@ -375,7 +375,7 @@ def section4(pdf, row_info_all):
                 pdf.drawString(x2, y, "Tree Num")
                 pdf.drawString(x3, y, "Max Difference (mm)")
                 y -= 20
-            pdf.drawString(x1, y, str(row_num))
+            pdf.drawString(x1, y, str(row_info["row_num"]))
             pdf.drawString(x2, y, str(tree_num + 1))
             pdf.drawString(x3, y, str(np.round(max_diff * 1000, 2)))
             y -= 20
@@ -383,9 +383,9 @@ def section4(pdf, row_info_all):
 if __name__ == "__main__":
 
     row_info_saved = []
-    for row_num in [96, 97, 98]:
+    for row_num in [97, 98]:
         # Get the row info
-        row_info_saved.append(evaluate_row(row_num, num_measurements=2))
+        row_info_saved.append(evaluate_row(row_num, num_measurements=1))
 
     # Get the path to save the PDF
     pdf_path = os.environ.get("RESULTS_PATH") + "report.pdf"
@@ -394,7 +394,8 @@ if __name__ == "__main__":
     pdf = canvas.Canvas(pdf_path, pagesize=letter)
     # Page is 612 x 792
 
-    section1(pdf, row_info_saved)
+    info = " "
+    section1(pdf, row_info_saved, info)
     section2(pdf, row_info_saved)
     section3(pdf, row_info_saved)
     section4(pdf, row_info_saved)
